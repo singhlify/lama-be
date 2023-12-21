@@ -1,12 +1,42 @@
 import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
-const PORT = process.env.PORT || 8000;
 const app = express();
+
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
+app.use(
+  express.json({
+    limit: "2mb",
+  })
+);
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
 app.get("/", (req, res) => {
   res.status(200).json({
-    message: "Hello World!",
+    message: "Welcome to the LAMA Demo project",
   });
 });
+
+// routes
+import {
+  fileRouter,
+  projectRouter,
+  userRouter,
+  widgetConfigRouter,
+} from "./src/routes/index.js";
+import { authMiddleware } from "./src/middlewares/index.js";
+
+const apiV1 = "/api/v1";
+app.use(`${apiV1}/user`, authMiddleware, userRouter);
+app.use(`${apiV1}/project`, authMiddleware, projectRouter);
+app.use(`${apiV1}/file`, authMiddleware, fileRouter);
+app.use(`${apiV1}/widgetConfig`, authMiddleware, widgetConfigRouter);
 
 export { app };
