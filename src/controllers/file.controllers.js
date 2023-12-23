@@ -1,52 +1,81 @@
-import { Project, User } from "../models/index.js";
+import { File, Project } from "../models/index.js";
+import { errorHandler, responseHandler } from "../utils/handlers.js";
 
 export const createFile = async (req, res) => {
   try {
     const { projectId, fileName, fileDescription } = req.body;
 
+    if (!fileName) {
+      return errorHandler({
+        res,
+        error: "File Name is required",
+        statusCode: 400,
+      });
+    }
+
     if (!projectId) {
-      return res.status(400).json({ error: "Project ID is required" });
+      return errorHandler({
+        res,
+        error: "Project ID is required",
+        statusCode: 400,
+      });
     }
     const project = await Project.findById(projectId);
+    if (!project) {
+      return errorHandler({
+        res,
+        error: "Project not found",
+        statusCode: 404,
+      });
+    }
 
     const newFile = await File.create({
       name: fileName,
       description: fileDescription,
     });
 
-    if (!project) {
-      return res.status(404).json({ error: "Project not found" });
-    }
-
     project.files.push(newFile._id);
 
     await project.save();
 
-    res.json({
-      fileId: newFile._id,
-      fileName: newFile.name,
-      fileDescription: newFile.description,
-      projectId: project._id,
+    return responseHandler({
+      res,
+      statusCode: 201,
+      message: "File Created Successfully!",
+      data: {
+        projectId: project._id,
+        fileId: newFile._id,
+        fileName: newFile.name,
+        fileDescription: newFile.description,
+      },
     });
   } catch (error) {
     console.log("error>>>", error);
-    return res.status(500).json({
-      message: "Something went wrong",
+    return errorHandler({
+      res,
+      error: error?.response,
     });
   }
 };
 
 export const updateFile = async (req, res) => {
   try {
-    const fileId = req.body.fileId;
-
+    const fileId = req.body?.fileId;
     if (!fileId) {
-      return res.status(400).json({ error: "File ID is required" });
+      return errorHandler({
+        res,
+        error: "File ID is required",
+        statusCode: 400,
+      });
     }
 
     const file = await File.findById(fileId);
     if (!file) {
-      return res.status(404).json({ error: "File not found" });
+      return errorHandler({
+        res,
+        error: "File not found",
+        statusCode: 404,
+      });
     }
 
     if (req.body.fileName) {
@@ -58,66 +87,86 @@ export const updateFile = async (req, res) => {
     }
 
     const updatedFile = await file.save();
-
-    res.json({
-      fileId: updatedFile._id,
-      fileName: updatedFile.name,
-      fileDescription: updatedFile.description,
+    return responseHandler({
+      res,
+      message: "File Updated Successfully!",
+      data: {
+        fileId: updatedFile._id,
+        fileName: updatedFile.name,
+        fileDescription: updatedFile.description,
+      },
     });
   } catch (error) {
     console.log("error>>>", error);
-    return res.status(500).json({
-      message: "Something went wrong",
+    return errorHandler({
+      res,
+      error: error?.response,
     });
   }
 };
 
 export const deleteFile = async (req, res) => {
   try {
-    const { fileId } = req.params;
+    const fileId = req.body?.fileId;
     if (!fileId) {
-      return res.status(400).json({ error: "File ID is required" });
+      return errorHandler({
+        res,
+        error: "File ID is required",
+        statusCode: 400,
+      });
     }
 
     const file = await File.findById(fileId);
     if (!file) {
-      return res.status(404).json({ error: "File not found" });
+      return errorHandler({
+        res,
+        error: "File not found",
+        statusCode: 404,
+      });
     }
 
-    await file.remove();
-
-    res.json({ message: "File deleted successfully" });
+    await file.deleteOne();
+    return responseHandler({
+      res,
+      message: "File deleted successfully",
+    });
   } catch (error) {
     console.log("error>>>", error);
-    return res.status(500).json({
-      message: "Something went wrong",
+    return errorHandler({
+      res,
+      error: error?.response,
     });
   }
 };
 
 export const getAllFiles = async (req, res) => {
   try {
-    const userId = req.cookies.userId || req.body.userId || req.query.userId;
-    const projectId = req.query.projectId;
+    const user = req.user;
+    const projectId = req.query?.projectId;
 
-    if (!userId || !projectId) {
-      return res
-        .status(400)
-        .json({ error: "User ID and Project ID are required" });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (!projectId) {
+      return errorHandler({
+        res,
+        error: "Project Id is required",
+        statusCode: 400,
+      });
     }
 
     if (!user.projects.includes(projectId)) {
-      return res.status(404).json({ error: "Project not found for the user" });
+      return errorHandler({
+        res,
+        error: "Project not found for the user",
+        statusCode: 404,
+      });
     }
 
     const project = await Project.findById(projectId).populate("files");
     if (!project) {
-      return res.status(404).json({ error: "Project not found" });
+      return errorHandler({
+        res,
+        error: "Project not found",
+        statusCode: 404,
+      });
     }
 
     const files = project.files.map((file) => ({
@@ -126,36 +175,55 @@ export const getAllFiles = async (req, res) => {
       updatedAt: file.updatedAt,
     }));
 
-    res.json(files);
+    return responseHandler({
+      res,
+      data: {
+        projectName: project.name,
+        files,
+      },
+    });
   } catch (error) {
     console.log("error>>>", error);
-    return res.status(500).json({
-      message: "Something went wrong",
+    return errorHandler({
+      res,
+      error: error?.response,
     });
   }
 };
 
 export const getFileById = async (req, res) => {
   try {
-    const fileId = req.query.fileId;
+    const fileId = req.params.fileId;
     if (!fileId) {
-      return res.status(400).json({ error: "File ID is required" });
+      return errorHandler({
+        res,
+        error: "File ID is required",
+        statusCode: 400,
+      });
     }
 
     const file = await File.findById(fileId);
     if (!file) {
-      return res.status(404).json({ error: "File not found" });
+      return errorHandler({
+        res,
+        error: "File not found",
+        statusCode: 404,
+      });
     }
 
-    res.json({
-      fileId: file._id,
-      fileName: file.name,
-      fileDescription: file.description,
+    return responseHandler({
+      res,
+      data: {
+        fileId: file._id,
+        fileName: file.name,
+        fileDescription: file.description,
+      },
     });
   } catch (error) {
     console.log("error>>>", error);
-    return res.status(500).json({
-      message: "Something went wrong",
+    return errorHandler({
+      res,
+      error: error?.response,
     });
   }
 };

@@ -6,7 +6,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: true,
     credentials: true,
   })
 );
@@ -26,6 +26,7 @@ app.get("/", (req, res) => {
 
 // routes
 import {
+  authRouter,
   fileRouter,
   projectRouter,
   userRouter,
@@ -34,6 +35,7 @@ import {
 import { authMiddleware } from "./src/middlewares/index.js";
 
 const apiV1 = "/api/v1";
+app.use(`${apiV1}/auth`, authRouter);
 app.use(`${apiV1}/user`, authMiddleware, userRouter);
 app.use(`${apiV1}/project`, authMiddleware, projectRouter);
 app.use(`${apiV1}/file`, authMiddleware, fileRouter);

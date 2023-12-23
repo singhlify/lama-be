@@ -1,49 +1,60 @@
-import { Project, User } from "../models/index.js";
+import { Project } from "../models/index.js";
+import { errorHandler, responseHandler } from "../utils/handlers.js";
 
 export const createProject = async (req, res) => {
   try {
-    const userId = req.cookies.userId || req.body.userId || req.query.userId;
-    const { name } = req.body;
-
+    const name = req.body?.name;
     if (!name) {
-      return res.status(400).json({
-        message: "Project name is required",
+      return errorHandler({
+        res,
+        error: "Project Name is required",
+        statusCode: 400,
       });
     }
 
-    const user = await User.findById(userId);
+    const user = req.user;
 
     const project = await Project.create({ name });
     user.projects.push(project._id);
     await user.save();
 
-    res.json({
-      projectId: project._id,
-      projectName: project.name,
+    return responseHandler({
+      res,
+      statusCode: 201,
+      message: "Projected Created Successfully!",
+      data: {
+        projectId: project._id,
+        projectName: project.name,
+      },
     });
   } catch (error) {
     console.log("error>>>", error);
-    return res.status(500).json({
-      message: "Something went wrong",
+    return errorHandler({
+      res,
+      error: error?.response,
     });
   }
 };
 
 export const getAllProjects = async (req, res) => {
   try {
-    const userId = req.cookies.userId || req.body.userId || req.query.userId;
-    const user = await User.findById(userId).populate("projects");
+    const user = req.user;
+    const populatedUser = await user.populate("projects");
 
-    const projects = user.projects.map((project) => ({
+    const projects = populatedUser.projects.map((project) => ({
       projectId: project._id,
       projectName: project.name,
     }));
 
-    res.json(projects);
+    return responseHandler({
+      res,
+      data: projects,
+    });
   } catch (error) {
     console.log("error>>>", error);
-    return res.status(500).json({
-      message: "Something went wrong",
+    return errorHandler({
+      res,
+      error: error?.response,
     });
   }
 };

@@ -3,24 +3,23 @@ import mongoose from "mongoose";
 const widgetConfigSchema = new mongoose.Schema(
   {
     general: {
-      chatBotName: String,
-      welcomeMessage: String,
-      inputPlaceholder: String,
+      chatBotName: { type: String, default: "" },
+      welcomeMessage: { type: String, default: "" },
     },
     display: {
       botProp: {
-        primaryColor: String,
-        fontColor: String,
-        fontSize: String,
-        chatHeight: String,
-        showSources: String,
+        primaryColor: { type: String, default: "" },
+        fontColor: { type: String, default: "" },
+        fontSize: { type: String, default: "" },
+        chatHeight: { type: String, default: "" },
+        showSources: { type: String, default: "" },
       },
       chatIconProp: {
-        iconSize: String,
-        screenPosition: String,
-        bottomDistance: String,
-        horizontalDistance: String,
-        botIcon: String,
+        iconSize: { type: String, default: "" },
+        screenPosition: { type: String, default: "" },
+        bottomDistance: { type: String, default: "" },
+        horizontalDistance: { type: String, default: "" },
+        botIcon: { type: Object, default: "" },
       },
     },
   },

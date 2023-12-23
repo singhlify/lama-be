@@ -1,18 +1,34 @@
-export const authMiddleware = (req, res, next) => {
+import { errorHandler } from "../utils/index.js";
+import { User } from "../models/index.js";
+
+export const authMiddleware = async (req, res, next) => {
   try {
-    const userId = req.cookies.userId || req.body.userId || req.query.userId;
+    const userId = req.cookies.userId || req?.headers?.authorization || null;
 
     if (!userId) {
-      return res.status(401).json({
-        message: "Unauthorized",
+      return errorHandler({
+        res,
+        error: "Unauthorized",
+        statusCode: 401,
       });
     }
 
+    const user = await User.findById(userId);
+    if (!user) {
+      return errorHandler({
+        res,
+        error: "Unauthorized",
+        statusCode: 401,
+      });
+    }
+
+    req.user = user;
     next();
   } catch (error) {
     console.log("error>>>", error);
-    return res.status(500).json({
-      message: "Something went wrong",
+    errorHandler({
+      res,
+      error: "Something went wrong",
     });
   }
 };

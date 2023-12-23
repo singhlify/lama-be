@@ -11,10 +11,9 @@ const userSchema = new mongoose.Schema(
     },
     fullName: {
       type: String,
-      required: true,
       trim: true,
+      default: "New User",
     },
-    avatar: String,
     projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }],
   },
   {

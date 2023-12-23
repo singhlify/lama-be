@@ -9,10 +9,10 @@ import {
 
 const fileRouter = Router();
 
+fileRouter.get("/all", getAllFiles);
+fileRouter.get("/:fileId", getFileById);
 fileRouter.post("/create", createFile);
 fileRouter.put("/update", updateFile);
 fileRouter.delete("/delete", deleteFile);
-fileRouter.get("/all", getAllFiles);
-fileRouter.get("/:id", getFileById);
 
 export { fileRouter };
