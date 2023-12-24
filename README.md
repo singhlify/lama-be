@@ -1,4 +1,4 @@
-# Project Title
+# LAMA Podcast (Backend)
 
 This is a JavaScript project that uses pnpm for package management. It's a web application with a structured layout, including controllers, models, routes, and utility functions.
 
